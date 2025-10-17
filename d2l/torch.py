@@ -2010,7 +2010,7 @@ def read_ptb():
     return [line.split() for line in raw_text.split('\n')]
 
 def subsample(sentences, vocab):
-    """Subsample high-frequency words.
+    """Subsample high-frequency words. #todo: filter out the high-frequency words like a, the because they don't contain much useful information
 
     Defined in :numref:`sec_word2vec_data`"""
     # Exclude unknown tokens ('<unk>')
@@ -2093,9 +2093,9 @@ def batchify(data):
     max_len = max(len(c) + len(n) for _, c, n in data)
     centers, contexts_negatives, masks, labels = [], [], [], []
     for center, context, negative in data:
-        cur_len = len(context) + len(negative)
+        cur_len = len(context) + len(negative) #todo: for padding, context is positive samples and negative is negative samples.
         centers += [center]
-        contexts_negatives += [context + negative + [0] * (max_len - cur_len)]
+        contexts_negatives += [context + negative + [0] * (max_len - cur_len)] # [0] * (max_len - cur_len)] for padding, it is list of list [[]]
         masks += [[1] * cur_len + [0] * (max_len - cur_len)]
         labels += [[1] * len(context) + [0] * (max_len - len(context))]
     return (d2l.reshape(d2l.tensor(centers), (-1, 1)), d2l.tensor(
@@ -2115,6 +2115,8 @@ def load_data_ptb(batch_size, max_window_size, num_noise_words):
     all_negatives = get_negatives(
         all_contexts, vocab, counter, num_noise_words)
 
+    # todo: so len(all_centers) = len(all_contexts) = len(all_negatives)
+
     class PTBDataset(torch.utils.data.Dataset):
         def __init__(self, centers, contexts, negatives):
             assert len(centers) == len(contexts) == len(negatives)
@@ -2130,7 +2132,10 @@ def load_data_ptb(batch_size, max_window_size, num_noise_words):
             return len(self.centers)
 
     dataset = PTBDataset(all_centers, all_contexts, all_negatives)
-
+    # for center, context, negative in dataset:
+    #     print(center, context, negative)
+    # 6697 [4127, 3228] [6137, 2897, 6438, 5932, 6079, 109, 2006, 917, 3448, 1719]
+    # todo: skip-gram 里 negative 的数量远多于context是 loss function的设计，需查看公式
     data_iter = torch.utils.data.DataLoader(dataset, batch_size, shuffle=True,
                                       collate_fn=batchify,
                                       num_workers=num_workers)
