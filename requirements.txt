@@ -1,0 +1,9 @@
+jupyter
+numpy
+matplotlib
+matplotlib-inline
+pandas
+requests
+torch
+torchvision
+scipy
